@@ -25,5 +25,4 @@ temp/
 *.sql
 .DS_Store
 
-sandbox/*
-!sandbox/.gitkeep
+sandbox/
