@@ -1,0 +1,59 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    env_file:
+      - .env
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      - gateway
+
+  gateway:
+    build:
+      context: ./gateway
+    env_file:
+      - .env
+    ports:
+      - "${GATEWAY_PORT:-3000}:3000"
+    volumes:
+      - ./sandbox:/workspace/sandboxes:ro
+    depends_on:
+      - orchestrator
+      - postgres
+      - redis
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+    env_file:
+      - .env
+    ports:
+      - "${ORCHESTRATOR_PORT:-8000}:8000"
+    volumes:
+      - ./sandbox:/workspace/sandboxes
+      - ./tests:/tests:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aidev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aidev}
+      POSTGRES_DB: ${POSTGRES_DB:-aidev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+volumes:
+  pgdata:
